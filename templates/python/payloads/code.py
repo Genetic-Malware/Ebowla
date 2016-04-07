@@ -1,0 +1,3 @@
+loader="""
+exec(self.payload)
+"""
