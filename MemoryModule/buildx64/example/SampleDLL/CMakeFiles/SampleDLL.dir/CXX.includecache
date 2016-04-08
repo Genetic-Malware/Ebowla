@@ -1,0 +1,14 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/root/genetic-malware/MemoryModule/example/SampleDLL/SampleDLL.cpp
+SampleDLL.h
+/root/genetic-malware/MemoryModule/example/SampleDLL/SampleDLL.h
+
+/root/genetic-malware/MemoryModule/example/SampleDLL/SampleDLL.h
+

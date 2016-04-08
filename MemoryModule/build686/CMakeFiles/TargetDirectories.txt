@@ -1,0 +1,4 @@
+/root/MemoryModule/build686/example/DllLoader/CMakeFiles/DllLoader.dir
+/root/MemoryModule/build686/example/DllLoader/CMakeFiles/DllLoaderLoader.dir
+/root/MemoryModule/build686/CMakeFiles/MemoryModule.dir
+/root/MemoryModule/build686/example/SampleDLL/CMakeFiles/SampleDLL.dir

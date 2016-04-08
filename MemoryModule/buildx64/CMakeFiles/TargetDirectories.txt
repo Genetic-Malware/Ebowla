@@ -1,0 +1,4 @@
+/root/genetic-malware/MemoryModule/buildx64/example/DllLoader/CMakeFiles/DllLoader.dir
+/root/genetic-malware/MemoryModule/buildx64/example/DllLoader/CMakeFiles/DllLoaderLoader.dir
+/root/genetic-malware/MemoryModule/buildx64/CMakeFiles/MemoryModule.dir
+/root/genetic-malware/MemoryModule/buildx64/example/SampleDLL/CMakeFiles/SampleDLL.dir

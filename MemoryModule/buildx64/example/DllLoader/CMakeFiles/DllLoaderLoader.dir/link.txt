@@ -1,0 +1,1 @@
+x86_64-w64-mingw32-g++       -Wl,--image-base -Wl,0x10000000 CMakeFiles/DllLoaderLoader.dir/DllLoaderLoader.cpp.o  -o DllLoaderLoader.exe -static ../../MemoryModule.a 

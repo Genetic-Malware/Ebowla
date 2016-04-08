@@ -1,0 +1,2 @@
+i686-w64-mingw32-ar cr MemoryModule.a  CMakeFiles/MemoryModule.dir/MemoryModule.c.o
+i686-w64-mingw32-ranlib MemoryModule.a

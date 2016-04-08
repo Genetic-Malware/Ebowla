@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/root/genetic-malware/MemoryModule/MemoryModule.c
+windows.h
+-
+winnt.h
+-
+stddef.h
+-
+stdint.h
+-
+tchar.h
+-
+stdio.h
+-
+MemoryModule.h
+/root/genetic-malware/MemoryModule/MemoryModule.h
+
+/root/genetic-malware/MemoryModule/MemoryModule.h
+windows.h
+-
+

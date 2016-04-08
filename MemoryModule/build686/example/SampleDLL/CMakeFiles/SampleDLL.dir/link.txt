@@ -1,0 +1,1 @@
+i686-w64-mingw32-g++  -fPIC    -shared -Wl,-soname,SampleDLL.dll -o SampleDLL.dll CMakeFiles/SampleDLL.dir/SampleDLL.cpp.o CMakeFiles/SampleDLL.dir/SampleDLL.rc.res 
