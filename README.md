@@ -3,9 +3,10 @@
 ```
 USAGE: ./ebowla.py exe_dll_shellcode genetic.config
 
+Then: Compile your code
 ```
 
-###Presentation Resources
+### Presentation Resources
 
 Slides:
 
@@ -23,6 +24,24 @@ Demo3:
 https://youtu.be/mlh70LtwmDo
 
 
-Read genetic.config for options
+### Contact:
+```
+  twitter:
+    @wired33
+    @midnite_runr
+    
+```
 
-More to come..
+# Documentation
+
+```
+  https://github.com/Genetic-Malware/Ebowla/blob/master/documentation.md
+  
+  Also read genetic.config
+
+```
+
+### Credits
+
+https://github.com/vyrus001/go-mimikatz
+
