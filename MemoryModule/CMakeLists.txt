@@ -1,6 +1,7 @@
 project (MemoryModule)
 cmake_minimum_required (VERSION 2.8.7)
 
+# set to i686 below for x86
 set (PLATFORM "x86_64" CACHE STRING "Platform to compile for")
 message (STATUS "Compile for ${PLATFORM} platform")
 
