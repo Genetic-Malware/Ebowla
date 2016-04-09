@@ -46,7 +46,10 @@ You have a couple options for encryption:
 
 ```
 Encryption options:
-  - OTP
+  - OTP 
+      We call this OTP in a general sense, it is more like a digitial book cipher with compression.  
+      There is no modular addition and the the pads are NOT generated from a random sream of data.
+      - cheers to psifertex making a better correlation for this mode.
   - ENV
 
 Payload Types:
