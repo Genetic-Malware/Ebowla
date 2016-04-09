@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import ast
 import sys
+
 try:
     from configobj import ConfigObj
 except:
