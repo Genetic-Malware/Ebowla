@@ -130,7 +130,7 @@ class otp_key:
     
         print '[*] Location of key in file', hex(self.location)
 
-        # Do a sha512 has of the key and trim the front 32 bits
+        # Do a sha512 has of the key and trim the front 32 bytes (256 bits)
         #self.key = self.key_line
         key_iterations = self.key_iterations
         
