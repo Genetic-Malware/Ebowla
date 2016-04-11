@@ -63,13 +63,6 @@ func walk_os(scan_dir string) {
         }
     }
     
-    //Call Walk function to process all directories
-    //You can either wait here for all directories to be processed and then perform checks... 
-    // If you want to perform checks for each file found then do it above in the walk function
-    //
-    // The beauty here is that you get back (in the global value globalFile) an array of structs
-    //  which you can iterate through and know if they are directories or files and then use for
-    //  the appropriate function
     _ = filepath.Walk(scan_dir, walk_path)
 
     fmt.Printf("[*] Total FS Length %v \\n", len(globalFile))
