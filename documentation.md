@@ -48,7 +48,7 @@ You have a couple options for encryption:
 Encryption options:
   - OTP 
       We call this OTP in a general sense, it is more like a digitial book cipher with compression.  
-      There is no modular addition and the the pads are NOT generated from a random sream of data.
+      There is no modular addition and the the pads are NOT generated from a random stream of data.
       - cheers to psifertex making a better correlation for this mode.
   - ENV
 
