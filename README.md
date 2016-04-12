@@ -58,5 +58,6 @@ https://github.com/vyrus001/go-mimikatz
 ### Contributors
 
 https://github.com/wired33 (wrote most of the golang payload code)
+
 https://github.com/secretsquirrel (wrote the python payload code and most of the encryption code)
 
