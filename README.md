@@ -55,6 +55,28 @@ https://youtu.be/mlh70LtwmDo
 
 https://github.com/vyrus001/go-mimikatz
 
+
+### Contributing
+
+If you have a bug report, submit an issue.  Include the OS that you tested everything on, including the server (victim).
+
+Output of commands we like:
+```
+Windows:
+  systeminfo
+  
+Linux:
+  uname -a
+  
+```
+
+If you want to contribute code please do so.  We ask that you actually submit something substantial, fixing spacing doesn't count, or making our code fully pep8.  
+
+Look at our issues for ideas where you can help: https://github.com/Genetic-Malware/Ebowla/issues
+
+secretsquirrel is on IRC #freenode as midnite_runr
+
+
 ### Contributors
 
 https://github.com/wired33 (wrote most of the golang payload code)
