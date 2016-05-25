@@ -295,7 +295,6 @@ class env_encrypt:
                                "os",        # needed for memory module
                                "unsafe",    # needed for memory module
                                "io",
-                               "strings",
                                "fmt",
                                "encoding/hex",
                                "compress/zlib",
