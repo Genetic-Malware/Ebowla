@@ -114,7 +114,7 @@ func build_code(payload []byte, payload_hash []byte, minus_bytes int, key_combos
     fmt.Println("[*] Final key_list:", key_list)
     
     for _, key := range key_list{{
-        fmt.Println('==================================================')
+        fmt.Println("==================================================")
         temp_encrypted_payload := make([]byte, len(encrypted_payload))
         copy(temp_encrypted_payload, encrypted_payload)
         
