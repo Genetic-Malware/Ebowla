@@ -2,8 +2,11 @@ buildcode="""
 def pull_environmentals(environmentals):
     env_string = ''
     for env_var in environmentals:
-        env_string += os.getenv(env_var)
-
+        try:
+        	env_string += os.getenv(env_var)
+        except:
+        	pass
+        	
     return env_string.lower()
     
 """

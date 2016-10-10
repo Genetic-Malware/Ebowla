@@ -1,5 +1,7 @@
 loader="""
-import os
-with open(os.path.basename(self.output_name), 'w') as f:
-    f.write(self.payload)
+file_drop_output = "file_drop_output" + str(r"{0}")
+
+with open(file_drop_output, 'w') as f:
+	f.write(self.payload)
+
 """

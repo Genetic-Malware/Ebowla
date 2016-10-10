@@ -14,6 +14,7 @@ from Crypto import Random
 from templates.python.payloads import pe_exe
 from templates.python.payloads import win_shellcode
 from templates.python.payloads import code
+from templates.python.payloads import drop_file
 from templates.python import env_base
 from templates.python import environmentals
 from templates.python import external_ip
@@ -51,6 +52,8 @@ class env_encrypt:
         self.go_payload_call_stack = ''
         self.payload_imports = ''
         self.cleanup = cleanup
+        self.file_suffix = ''
+
         self.go_imports = set()
         self.set_payload()
         if output_type in ['python', 'both']:
@@ -100,11 +103,20 @@ class env_encrypt:
             # python only
             print "[*] Using python code loader"
             self.payload_loader = code.loader
-            
+
+        elif self.payload_type == "file_drop":
+            if len(os.path.basename(self.org_payload).split('.')) > 2:
+                file_suffix = '.' + '.'.join(os.path.basename(self.org_payload).split('.')[1:])
+            else:
+                filename, file_suffix = os.path.splitext(self.org_payload)
+
+            self.file_suffix = file_suffix
+            self.payload_loader = drop_file.loader.format(self.file_suffix)
+            #self.go_payload_loader = go_drop_file.loader
+
     def hash_payload(self):
         # This is the final hash ADD THE self.payload - minus function
         self.payload_hash = hashlib.sha512(self.payload[:-self.minus_bytes]).hexdigest()
-
 
     def populate_variables(self):
         self.used_env_strings = {}

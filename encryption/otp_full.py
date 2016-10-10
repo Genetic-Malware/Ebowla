@@ -15,6 +15,7 @@ from templates.python import otp_full_base
 from templates.python.payloads import pe_exe
 from templates.python.payloads import win_shellcode
 from templates.python.payloads import code
+from templates.python.payloads import drop_file
 from templates.go import go_otp_full_base
 from templates.go.payloads import go_win_shellcode
 from templates.go.payloads import go_memorymodule
@@ -38,7 +39,10 @@ class otp_full:
         self.payload_loader = ''
         self.lookup_table = ''
         self.cleanup = cleanup
+        self.file_suffix = ""
+
         self.set_payload()
+
         if output_type in ['python', 'both']:
             if 'dll' in self.payload_type.lower():
                 print "[X] No DLL Support for python"
@@ -91,7 +95,18 @@ class otp_full:
             
         elif self.payload_type == "code": # python code
             self.payload_loader = code.loader
-        
+
+        elif self.payload_type == "file_drop":
+            if len(os.path.basename(self.org_payload).split('.')) > 2:
+                file_suffix = '.' + '.'.join(os.path.basename(self.org_payload).split('.')[1:])
+            else:
+                filename, file_suffix = os.path.splitext(self.org_payload)
+
+            self.file_suffix = file_suffix
+            print "suffix", self.file_suffix
+            self.payload_loader = drop_file.loader.format(self.file_suffix)
+            #self.go_payload_loader = go_drop_file.loader
+
     def hash_payload(self):
         # This is the final hash ADD THE self.payload - minus function
         self.payload_hash = hashlib.sha512(self.payload[:-self.minus_bytes]).hexdigest()
@@ -220,7 +235,6 @@ class otp_full:
             elif self.payload_name and self.cleanup:
                 print "[!] Error Selecting Type of File for Cleaning : %s" % (self.payload_name)
             f.write(self.payload_output)
-
 
     def gen_pyloader(self):
         print "[*] Python payload hash (minus_bytes):", self.payload_hash

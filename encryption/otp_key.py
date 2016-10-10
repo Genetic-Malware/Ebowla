@@ -15,6 +15,7 @@ from templates.python import otp_symmetric_base
 from templates.python.payloads import pe_exe
 from templates.python.payloads import win_shellcode
 from templates.python.payloads import code
+from templates.python.payloads import drop_file
 from templates.go import go_otp_symmetric_base
 from templates.go.payloads import go_win_shellcode
 from templates.go.payloads import go_memorymodule
@@ -41,6 +42,8 @@ class otp_key:
         self.cleanup = cleanup
         self.set_payload()
         self.pad_max = pad_max
+        self.file_suffix = ''
+
         if output_type in ['python', 'both']:
             if 'dll' in self.payload_type.lower():
                 print "[X] No DLL Support for python"
@@ -98,9 +101,16 @@ class otp_key:
         elif self.payload_type == "code": # python code
             # python only
             self.payload_loader = code.loader
-        
-        
 
+        elif self.payload_type == "file_drop":
+            if len(os.path.basename(self.org_payload).split('.')) > 2:
+                file_suffix = '.' + '.'.join(os.path.basename(self.org_payload).split('.')[1:])
+            else:
+                filename, file_suffix = os.path.splitext(self.org_payload)
+
+            self.file_suffix = file_suffix
+            self.payload_loader = drop_file.loader.format(self.file_suffix)
+            #self.go_payload_loader = go_drop_file.loader
 
     def hash_payload(self):
         # This is the final hash ADD THE self.payload - minus function
