@@ -1,3 +1,4 @@
 loader="""
-exec(self.payload)
+d = dict(locals(), **globals())
+exec(self.payload, d, d)
 """
