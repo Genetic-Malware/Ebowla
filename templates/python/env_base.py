@@ -101,7 +101,6 @@ class build_code():
 {5}
 
 
-
 def main():
     lookup_table = zlib.decompress(base64.b64decode("{0}"))
     payload_hash = "{1}"
