@@ -109,7 +109,6 @@ class env_encrypt:
             
         elif self.payload_type == "code": # python code
             # python only
-            print "[*] Using python code loader"
             self.payload_loader = code.loader
             self.ps_payload_loader = ps_code.loader
 
