@@ -1,7 +1,6 @@
 buildcode="""
 function Get-ExternalIP(){
 	$extern_ip_mask = @()
-	$response
 	while ($response.IPAddress -eq $null){
 		$response = Resolve-DnsName -Name myip.opendns.com -Server resolver1.opendns.com
 		Start-Sleep -s 1

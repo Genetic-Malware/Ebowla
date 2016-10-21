@@ -102,7 +102,7 @@ function Get-R-Done($lookup_table, $payload_hash, $minus_bytes, $key_combos, $ke
         $keyvalue
         $sha512 = new-Object System.Security.Cryptography.SHA512Managed
         $keyvalue = [system.Text.Encoding]::UTF8.GetBytes($keyvalue.ToLower())
-	    while ($iteration_temp -ne 1){{
+	      while ($iteration_temp -ne 1){{
             $keyvalue = $sha512.ComputeHash($keyvalue)
             $iteration_temp--
         }}

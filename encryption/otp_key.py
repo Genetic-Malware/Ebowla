@@ -10,6 +10,8 @@ import os
 import platform
 from Crypto.Cipher import AES
 from Crypto import Random
+import StringIO
+import binascii
 
 from templates.python import otp_symmetric_base
 from templates.python.payloads import pe_exe
@@ -19,6 +21,8 @@ from templates.python.payloads import drop_file
 from templates.go import go_otp_symmetric_base
 from templates.go.payloads import go_win_shellcode
 from templates.go.payloads import go_memorymodule
+from templates.powershell import ps_otp_symmetric_base
+from templates.powershell.payloads import ps_code
 from cleanup import removeCommentsGo
 from cleanup import removeCommentsPy
 
@@ -64,12 +68,8 @@ class otp_key:
             self.gen_pyloader()
         elif self.output_type == 'go':
             self.gen_goloader()
-        elif self.output_type == 'both':
-            if 'dll' in self.payload_type.lower():
-                print "[X] No DLL Support for python"
-                sys.exit(-1)
-            self.gen_pyloader()
-            self.gen_goloader()
+        elif self.output_type == 'powershell':
+            self.gen_psloader()
 
     def set_payload(self):
         print "[*] Payload_type", self.payload_type
@@ -101,6 +101,7 @@ class otp_key:
         elif self.payload_type == "code": # python code
             # python only
             self.payload_loader = code.loader
+            self.ps_payload_loader = ps_code.loader
 
         elif self.payload_type == "file_drop":
             if len(os.path.basename(self.org_payload).split('.')) > 2:
@@ -116,7 +117,18 @@ class otp_key:
         # This is the final hash ADD THE self.payload - minus function
         self.payload_hash = hashlib.sha512(self.payload[:-self.minus_bytes]).hexdigest()
 
-
+    def pkcs7_encode(self, some_string):
+        '''
+        Pad an input string according to PKCS#7
+        '''
+        block = 16
+        text_length = len(some_string)
+        output = StringIO.StringIO()
+        val = block - (text_length % block)
+        for _ in xrange(val):
+            output.write('%02x' % val)
+        return some_string + binascii.unhexlify(output.getvalue())
+    
     def find_key_encrypt(self):
         self.location = 0
         self.sizeofPad = len(open(self.pad, 'r').read(self.pad_max))
@@ -154,24 +166,24 @@ class otp_key:
 
         self.key = hashlib.sha512(self.key).digest()[:32]
         
-        print '[*] Encryption Key:', self.key.encode('hex')
+        print '[*] Encryption Key:', self.key.encode('hex'), base64.b64encode(self.key)
         
         self.iv = Random.new().read(AES.block_size)
         
         # Using CFB because we don't have to break it up by blocks or use padding
+        if self.output_type == 'python':
+            cipher = AES.new(self.key, AES.MODE_CFB, self.iv)
+            
+            self.encrypted_msg = cipher.encrypt(self.payload)
+            print '[*] Length of encrypted payload', len(self.encrypted_msg), 'and hash:', hashlib.sha512(self.encrypted_msg).hexdigest()
+            self.lookup_table = zlib.compress(struct.pack("<I", self.location) + struct.pack("<H", self.key_len) + self.iv + self.encrypted_msg)
 
-        cipher = AES.new(self.key, AES.MODE_CFB, self.iv)
-        
-        self.encrypted_msg = cipher.encrypt(self.payload)
-        print '[*] Length of encrypted payload', len(self.encrypted_msg), 'and hash:', hashlib.sha512(self.encrypted_msg).hexdigest()
-        self.lookup_table = zlib.compress(struct.pack("<I", self.location) + struct.pack("<H", self.key_len) + self.iv + self.encrypted_msg)
-
-        # Encrypt payload payload
-        self.payload_loader = base64.b64encode(zlib.compress(cipher.encrypt(self.payload_loader)))
+            # Encrypt payload payload
+            self.payload_loader = base64.b64encode(zlib.compress(cipher.encrypt(self.payload_loader)))
         
         # Gen go formated AES cipher
         
-        if self.output_type.lower() in ['both', 'go']:
+        elif self.output_type.lower() == 'go':
             print "[*] Generating encrypted payload for the GO output (padding is different than python)"
             go_block_size = 128
 
@@ -192,6 +204,37 @@ class otp_key:
             print "\t[*] Length after padding:", len(self.payload)
             self.go_encrypted_msg = gocipher.encrypt(self.payload)
             self.go_lookup_table = zlib.compress(struct.pack("<I", self.location) + struct.pack("<H", self.key_len) + self.iv + self.go_encrypted_msg)
+
+        elif self.output_type == 'powershell':
+            print "in powershell"
+            ps_block_size = 128
+            pscipher = AES.new(self.key,
+                               AES.MODE_CBC,
+                               self.iv,
+                               segment_size = ps_block_size,
+                            )
+            self.b64_encoded_payload = base64.b64encode(self.payload)
+            print "Remove ME testing self.b64_encoded_payload:", self.b64_encoded_payload
+            
+            self.ps_encrypted_msg = pscipher.encrypt(self.pkcs7_encode(self.payload))
+            
+            self.ps_lookup_table = base64.b64encode(struct.pack("<I", self.location) + struct.pack("<H", self.key_len) + base64.b64encode(self.iv + self.ps_encrypted_msg))
+            print "just encrypted iv and msg in base64:", base64.b64encode(self.iv + self.ps_encrypted_msg)
+            print "Loader", self.ps_lookup_table
+            
+            # Must refresh
+            self.iv = Random.new().read(AES.block_size)
+            pscipher = AES.new(self.key,
+                               AES.MODE_CBC,
+                               self.iv,
+                               segment_size = ps_block_size,
+                )
+
+            self.encrypted_loader = pscipher.encrypt(self.pkcs7_encode(self.ps_payload_loader))
+            
+            self.ps_payload_loader = base64.b64encode(self.iv + self.encrypted_loader)
+            
+            print "PS_PAYLOAD_LOADER:", self.ps_payload_loader
 
 
     def write_payload(self):
@@ -257,4 +300,14 @@ class otp_key:
                                                              self.scan_dir, go_imports, self.key_iterations)
         self.write_payload()
 
+    def gen_psloader(self):
+        self.payload_name = 'powershell_otp_key_' + os.path.basename(self.org_payload) + ".ps1"
+        print '[*] Payload hash (minus_bytes):', self.payload_hash
+        print '[*] Hash of full payload:', hashlib.sha512(self.payload).hexdigest()
+        print "[*] Writing Python payload to:", self.payload_name
+        
+        self.payload_output = ps_otp_symmetric_base.buildcode.format(self.ps_lookup_table, self.payload_hash, 
+                                                             self.minus_bytes, self.ps_payload_loader, 
+                                                             self.scan_dir, self.key_iterations)
+        self.write_payload()
 

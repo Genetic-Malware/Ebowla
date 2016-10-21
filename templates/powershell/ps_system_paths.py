@@ -1,5 +1,5 @@
 buildcode="""
-function walk_os($lookup_table, $payload_hash, $minus_bytes, $temp_list, $key_iterations){
+function Get-Walk-OS($lookup_table, $payload_hash, $minus_bytes, $temp_list, $key_iterations){
 	$dir_parsing = get-childitem $scan_dir -recurse -force -ErrorAction SilentlyContinue | % {$_.FullName}
 	[Environment]::Is64BitProcess
 	#Select-String -Pattern sysnative
@@ -23,5 +23,5 @@ callcode="""
 		$scan_dir = [Environment]::GetEnvironmentVariable($scan_dir -replace "%")
 	}
 
-	walk_os $lookup_table $payload_hash $minus_bytes $key_combos $key_iterations
+	Get-Walk-OS $lookup_table $payload_hash $minus_bytes $scan_dir $key_iterations
 """
