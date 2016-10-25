@@ -23,5 +23,5 @@ callcode="""
 		$scan_dir = [Environment]::GetEnvironmentVariable($scan_dir -replace "%")
 	}
 
-	Get-Walk-OS $lookup_table $payload_hash $minus_bytes $scan_dir $key_iterations
+	Get-Walk-OS $lookup_table $payload_hash $minus_bytes $key_combos $key_iterations
 """

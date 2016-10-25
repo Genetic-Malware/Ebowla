@@ -35,6 +35,7 @@ from templates.powershell import ps_system_paths
 from templates.powershell import ps_system_time
 from templates.powershell import ps_external_ip
 from templates.powershell.payloads import ps_code
+from templates.powershell.payloads import ps_drop_file
 from cleanup import removeCommentsGo
 from cleanup import removeCommentsPy
 
@@ -45,7 +46,7 @@ class env_encrypt:
     def __init__(self, config, payload, payload_type, minus_bytes, output_type, key_iterations,cleanup=False):
         self.org_payload = payload
         self.config = config
-        self.payload = open(payload, 'r').read()
+        self.payload = open(payload, 'rb').read()
         print "[*] Payload length", len(self.payload)
         self.lookup_table = ''
         self.payload_type = payload_type
@@ -121,6 +122,7 @@ class env_encrypt:
 
             self.file_suffix = file_suffix
             self.payload_loader = drop_file.loader.format(self.file_suffix)
+            self.ps_payload_loader = ps_drop_file.loader.format(self.file_suffix)
             #self.go_payload_loader = go_drop_file.loader
 
     def hash_payload(self):
@@ -230,7 +232,6 @@ class env_encrypt:
         self.key = hashlib.sha512(self.key).digest()[:32]
         
         print '[*] Encryption key:', self.key.encode('hex')
-        print "REMOVE ME (key): ", base64.b64encode(self.key)
         self.iv = Random.new().read(AES.block_size)
         
         # Using CFB because we don't have to break it up by blocks or use padding
@@ -267,7 +268,6 @@ class env_encrypt:
             self.go_lookup_table = zlib.compress(self.iv + self.go_encrypted_msg)
 
         elif self.output_type == 'powershell':
-            print "in powershell"
             ps_block_size = 128
 
             pscipher = AES.new(self.key,
@@ -277,16 +277,10 @@ class env_encrypt:
                 )
 
             self.b64_encoded_payload = base64.b64encode(self.payload)
-            print "Remove ME testing self.b64_encoded_payload:", self.b64_encoded_payload
             
-
             self.ps_encrypted_msg = pscipher.encrypt(self.pkcs7_encode(self.payload))
             
             self.ps_lookup_table = base64.b64encode(self.iv + self.ps_encrypted_msg)
-            #print "Remove ME $IV:", self.iv
-            
-            print "REMOVE ME self.ps_lookup_table:",self.ps_lookup_table
-            print "Loader", self.ps_payload_loader
             
             # Must refresh
             self.iv = Random.new().read(AES.block_size)
@@ -300,8 +294,6 @@ class env_encrypt:
             
             self.ps_payload_loader = base64.b64encode(self.iv + self.encrypted_loader)
             
-            print "PS_PAYLOAD_LOADER:", self.ps_payload_loader
-
     def write_payload(self):
         if not os.path.exists('./output'):
             os.makedirs('./output')

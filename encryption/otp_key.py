@@ -31,7 +31,7 @@ class otp_key:
 
     def __init__(self, pad, payload, otp_type, payload_type, minus_bytes, scan_dir, output_type, key_iterations, pad_max, cleanup=False):
         self.org_payload = payload
-        self.payload = open(payload, 'r').read()
+        self.payload = open(payload, 'rb').read()
         print "[*] Payload length", hex(len(self.payload))
         self.lookup_table = ''
         self.otp_type = otp_type
@@ -214,13 +214,10 @@ class otp_key:
                                segment_size = ps_block_size,
                             )
             self.b64_encoded_payload = base64.b64encode(self.payload)
-            print "Remove ME testing self.b64_encoded_payload:", self.b64_encoded_payload
             
             self.ps_encrypted_msg = pscipher.encrypt(self.pkcs7_encode(self.payload))
             
             self.ps_lookup_table = base64.b64encode(struct.pack("<I", self.location) + struct.pack("<H", self.key_len) + base64.b64encode(self.iv + self.ps_encrypted_msg))
-            print "just encrypted iv and msg in base64:", base64.b64encode(self.iv + self.ps_encrypted_msg)
-            print "Loader", self.ps_lookup_table
             
             # Must refresh
             self.iv = Random.new().read(AES.block_size)
@@ -233,9 +230,6 @@ class otp_key:
             self.encrypted_loader = pscipher.encrypt(self.pkcs7_encode(self.ps_payload_loader))
             
             self.ps_payload_loader = base64.b64encode(self.iv + self.encrypted_loader)
-            
-            print "PS_PAYLOAD_LOADER:", self.ps_payload_loader
-
 
     def write_payload(self):
         if not os.path.exists('./output'):
