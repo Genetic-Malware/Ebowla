@@ -23,6 +23,8 @@ from templates.go.payloads import go_win_shellcode
 from templates.go.payloads import go_memorymodule
 from templates.powershell import ps_otp_symmetric_base
 from templates.powershell.payloads import ps_code
+from templates.powershell.payloads import drop_file
+from templates.powershell.payloads import ps_dll_exe
 from cleanup import removeCommentsGo
 from cleanup import removeCommentsPy
 
@@ -84,6 +86,7 @@ class otp_key:
             self.payload_loader = pe_exe.loader
             self.go_payload_loader = go_memorymodule.loader
             self.payload_imports = go_memorymodule.imports
+            self.ps_payload_loader = ps_dll_exe.loader
 
         elif self.payload_type == "dll_x86":
             # go memory module
@@ -91,12 +94,14 @@ class otp_key:
             #self.payload_loader = pe_dll_x86.loader
             self.go_payload_loader = go_memorymodule.loader
             self.payload_imports = go_memorymodule.imports
+            self.ps_payload_loader = ps_dll_exe.loader
             
         elif self.payload_type == "dll_x64":
             #self.payload_loader = pe_dll_x64.loader
             # go memory module
             self.go_payload_loader = go_memorymodule.loader
             self.payload_imports = go_memorymodule.imports
+            self.ps_payload_loader = ps_dll_exe.loader
             
         elif self.payload_type == "code": # python code
             # python only
@@ -111,6 +116,7 @@ class otp_key:
 
             self.file_suffix = file_suffix
             self.payload_loader = drop_file.loader.format(self.file_suffix)
+            self.ps_payload_loader = drop_file.loader.format(self.file_suffix)
             #self.go_payload_loader = go_drop_file.loader
 
     def hash_payload(self):
