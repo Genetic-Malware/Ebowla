@@ -67,6 +67,7 @@ class otp_full:
         elif output_type == 'go':
             self.gen_goloader()
         elif output_type == 'powershell':
+            self.parse_ps_payload()
             self.gen_psloader()
 
     def set_payload(self):
@@ -157,6 +158,47 @@ class otp_full:
                     break
         
         self.loader_lookup_table = base64.b64encode(zlib.compress(payload_loader_table))
+
+    def parse_ps_payload(self):
+        '''
+        For encrypting the powershell payload with the OTP.
+        Yes we're breaking the first rule of OTP club.
+        '''
+        print "[*] Encrypting powershell loader code with OTP"
+        position = 0
+        payload_loader_table = ''
+        
+        while True:    
+
+            if position >= len(self.ps_payload_loader):
+                break
+
+            for i in reversed(range(1, self.byte_width)):
+                #print i
+                found = False
+                #print self.payload[self.position:self.position+i].encode("hex"), i, self.position
+                search_text = re.escape(self.ps_payload_loader[position:position + i])
+                p = re.compile(search_text)
+
+                if len(self.ps_payload_loader[position:position + i]) < i:
+                    i = len(self.ps_payload_loader[position:position + i])
+                
+                _temp = set()
+                for m in p.finditer(self.pad):
+                    #print "Yes", hex(m.start()), m.group().encode('hex'), i, position
+                    _temp.add(m.start())
+                
+                if len(_temp) != 0:
+                    payload_loader_table += struct.pack("<I", random.choice(list(_temp)))[:-1]
+                    payload_loader_table += struct.pack("<B", i)
+                    found = True
+                    
+                if found is True:
+                    position += i
+                    break
+        
+        self.loader_lookup_table = base64.b64encode(payload_loader_table)
+
 
     def parse_binary(self):
         self.position = 0
@@ -292,7 +334,7 @@ class otp_full:
         print "[*] Writing PS payload to:", self.payload_name
         
         self.payload_output = ps_otp_full_base.buildcode.format(base64.b64encode(self.lookup_table), self.payload_hash, self.iterumhash,
-                                                             self.ps_payload_loader, self.minus_bytes, self.scan_dir)
+                                                             self.loader_lookup_table, self.minus_bytes, self.scan_dir)
         self.write_payload()
 
         
