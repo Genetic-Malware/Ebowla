@@ -125,9 +125,9 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
     $result = Get-CheckHash $stitchCheck $payload_hash $minus_bytes
         
        if ($result -eq 1){{
-        "[*] Final Hashes Match"
+        Write-Host "[*] Final Hashes Match"
         Get-CodeExecution $stitchCheck
-        return 0
+        return 1
 
         }}
     }}   
