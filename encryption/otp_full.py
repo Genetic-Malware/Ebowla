@@ -22,6 +22,7 @@ from templates.go.payloads import go_memorymodule
 from templates.powershell import ps_otp_full_base
 from templates.powershell.payloads import ps_code
 from templates.powershell.payloads import ps_dll_exe
+from templates.powershell.payloads import ps_win_shellcode
 from cleanup import removeCommentsGo
 from cleanup import removeCommentsPy
 
@@ -78,6 +79,7 @@ class otp_full:
             self.payload_loader = win_shellcode.loader
             self.go_payload_loader = go_win_shellcode.loader
             self.payload_imports = go_win_shellcode.imports
+            self.ps_payload_loader = ps_win_shellcode.loader
 
         elif self.payload_type == "exe":
             print '[*] Using EXE payload template' 
@@ -121,7 +123,6 @@ class otp_full:
     def set_test_hash(self):
         # This is the test hash at %10 of the original payload
         self.iterumhash = hashlib.sha512(self.payload[0:self.position]).hexdigest()
-    
     
     def parse_py_payload(self):
         '''

@@ -36,7 +36,8 @@ from templates.powershell import ps_system_time
 from templates.powershell import ps_external_ip
 from templates.powershell.payloads import ps_code
 from templates.powershell.payloads import ps_drop_file
-from templates.powershell.payloads import ps_dll
+from templates.powershell.payloads import ps_dll_exe
+from templates.powershell.payloads import ps_win_shellcode
 from cleanup import removeCommentsGo
 from cleanup import removeCommentsPy
 
@@ -88,20 +89,22 @@ class env_encrypt:
             self.payload_loader = win_shellcode.loader
             self.go_payload_loader = go_win_shellcode.loader
             self.payload_imports = go_win_shellcode.imports
+            self.ps_payload_loader = ps_win_shellcode.loader
 
         elif self.payload_type == "exe":
             print '[*] Using EXE payload template' 
             self.payload_loader = pe_exe.loader
             self.go_payload_loader = go_memorymodule.loader
             self.payload_imports = go_memorymodule.imports
-
+            self.ps_payload_loader = ps_dll_exe.loader
+            
         elif self.payload_type == "dll_x86":
             # go memory module
             print '[*] Using x86 dll payload template' 
             #self.payload_loader = pe_dll_x86.loader
             self.go_payload_loader = go_memorymodule.loader
             self.payload_imports = go_memorymodule.imports
-            self.ps_payload_loader = ps_dll.loader
+            self.ps_payload_loader = ps_dll_exe.loader
             
         elif self.payload_type == "dll_x64":
             print "[*] Using x64 dll payload tempate"
@@ -109,7 +112,7 @@ class env_encrypt:
             # go memory module
             self.go_payload_loader = go_memorymodule.loader
             self.payload_imports = go_memorymodule.imports
-            self.ps_payload_loader = ps_dll.loader
+            self.ps_payload_loader = ps_dll_exe.loader
             
         elif self.payload_type == "code": # python code
             # python only
