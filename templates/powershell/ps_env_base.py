@@ -68,7 +68,6 @@ function Get-R-Done($lookup_table, $payload_hash, $minus_bytes, $key_combos, $ke
 	$another_temp = @()
     foreach ($item in $key_combos){{
       if ($item.GetType().Name -eq "String") {{  
-          $key_list.count
           if ($key_list.count -eq 0){{
               $key_list += $item
           }} else {{

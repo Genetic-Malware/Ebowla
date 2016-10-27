@@ -1,6 +1,6 @@
 buildcode="""
 function Get-Walk-OS($lookup_table, $payload_hash, $minus_bytes, $temp_list, $key_iterations){
-	$dir_parsing = get-childitem $scan_dir -recurse -force -ErrorAction SilentlyContinue | % {$_.FullName}
+	$dir_parsing += get-childitem $scan_dir -recurse -force -ErrorAction SilentlyContinue | % {$_.FullName}
 	$sys_paths = @("c:\", "c:\windows", "c:\windows\system32")
 	
 	if ([Environment]::Is64BitProcess -eq 0 -And $sys_paths -contains $scan_dir) { # Is a 32bit process
