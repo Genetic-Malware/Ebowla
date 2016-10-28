@@ -10,9 +10,11 @@ Then: Compile your code
 
 Slides:
 
-https://github.com/Genetic-Malware/Ebowla/raw/master/Infiltrate_2016_Morrow_Pitts_Genetic_Malware.pdf
+Infiltrate 2016: https://github.com/Genetic-Malware/Ebowla/raw/master/Infiltrate_2016_Morrow_Pitts_Genetic_Malware.pdf
 
-Demos
+Ekoparty 2016: https://github.com/Genetic-Malware/Ebowla/blob/master/Eko_2016_Morrow_Pitts_Master.key
+
+Demos:
 
 Demo1:
 https://www.youtube.com/watch?v=rRm3O7w5GHg
@@ -22,6 +24,9 @@ https://youtu.be/Bu_qDrbX9Zo
 
 Demo3:
 https://youtu.be/mlh70LtwmDo
+
+Demo4 (PowerShell):
+https://youtu.be/lyedtAtATGc
 
 
 ### Contact:
@@ -51,10 +56,14 @@ https://youtu.be/mlh70LtwmDo
 |Shell Code| x32 / x64 - In Memory| x32 / x64 - In Memory|  x32 / x64 - In Memory|
 |Python Code| x32 / x64 - In Memory| x32 / x64 - None| None|
 |Powershell code|None|None|Yes|
-|File Drop| YES | YES | Yes |
+|File Drop| Yes | In Progress | Yes |
 ### Credits
 
 https://github.com/vyrus001/go-mimikatz
+
+https://github.com/PowerShellMafia/PowerSploit/blob/master/CodeExecution/Invoke-ReflectivePEInjection.ps1
+
+https://github.com/PowerShellMafia/PowerSploit/blob/master/CodeExecution/Invoke-Shellcode.ps1
 
 
 ### Contributing
