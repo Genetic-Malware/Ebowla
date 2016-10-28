@@ -14,7 +14,7 @@ Infiltrate 2016: https://github.com/Genetic-Malware/Ebowla/raw/master/Infiltrate
 
 Ekoparty 2016: https://github.com/Genetic-Malware/Ebowla/blob/master/Eko_2016_Morrow_Pitts_Master.key
 
-Demos
+Demos:
 
 Demo1:
 https://www.youtube.com/watch?v=rRm3O7w5GHg
@@ -24,6 +24,9 @@ https://youtu.be/Bu_qDrbX9Zo
 
 Demo3:
 https://youtu.be/mlh70LtwmDo
+
+Demo4 (PowerShell):
+https://youtu.be/lyedtAtATGc
 
 
 ### Contact:
