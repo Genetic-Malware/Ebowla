@@ -51,10 +51,14 @@ https://youtu.be/mlh70LtwmDo
 |Shell Code| x32 / x64 - In Memory| x32 / x64 - In Memory|  x32 / x64 - In Memory|
 |Python Code| x32 / x64 - In Memory| x32 / x64 - None| None|
 |Powershell code|None|None|Yes|
-|File Drop| YES | YES | Yes |
+|File Drop| Yes | In Progress | Yes |
 ### Credits
 
 https://github.com/vyrus001/go-mimikatz
+
+https://github.com/PowerShellMafia/PowerSploit/blob/master/CodeExecution/Invoke-ReflectivePEInjection.ps1
+
+https://github.com/PowerShellMafia/PowerSploit/blob/master/CodeExecution/Invoke-Shellcode.ps1
 
 
 ### Contributing
