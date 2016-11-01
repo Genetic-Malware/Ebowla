@@ -23,7 +23,7 @@ from templates.go.payloads import go_win_shellcode
 from templates.go.payloads import go_memorymodule
 from templates.powershell import ps_otp_symmetric_base
 from templates.powershell.payloads import ps_code
-from templates.powershell.payloads import drop_file
+from templates.powershell.payloads import ps_drop_file
 from templates.powershell.payloads import ps_dll_exe
 from templates.powershell.payloads import ps_win_shellcode
 from cleanup import removeCommentsGo
