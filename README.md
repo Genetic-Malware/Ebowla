@@ -48,7 +48,7 @@ https://youtu.be/lyedtAtATGc
 
 # Payload Support
 
-|Payload|Python|GO|PowerShell
+|Payload|Python|GO|PowerShell(tested on v5)
 |:-----|:-----|:----|:----|
 |Reflective DLL| x32 / x64 - None| x32 / x64 - In Memory| x32 / x64 - In Memory|
 |DLL| x32 / x64 - None| x32 / x64 - In Memory| x32 / x64 - In Memory|
