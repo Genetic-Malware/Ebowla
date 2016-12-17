@@ -6,6 +6,14 @@ USAGE: ./ebowla.py exe_dll_shellcode genetic.config
 Then: Compile your code
 ```
 
+### Known Issues
+
+MSF x86 EXE file output not compatible with MemoryModule (use DLL or x64 EXE/DLL)
+https://github.com/Genetic-Malware/Ebowla/issues/12
+
+Powershell output was tested on powershellv5
+
+
 ### Presentation Resources
 
 Slides:
