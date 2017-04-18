@@ -1,4 +1,4 @@
-#EBOWLA
+# EBOWLA
 
 ```
 USAGE: ./ebowla.py exe_dll_shellcode genetic.config
