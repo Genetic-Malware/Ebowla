@@ -1,4 +1,4 @@
-#EBOWLA
+# EBOWLA
 
 ```
 USAGE: ./ebowla.py exe_dll_shellcode genetic.config
@@ -7,6 +7,11 @@ Then: Compile your code
 ```
 
 ### Known Issues
+
+The current version is locked into golang version <= 1.9 known working on golang 1.6: https://github.com/Genetic-Malware/Ebowla/issues/23
+
+If someone wants to update the codebase to support LDFlags for golang 1.9+ we accept pull requests!
+
 
 MSF x86 EXE file output not compatible with MemoryModule (use DLL or x64 EXE/DLL)
 https://github.com/Genetic-Malware/Ebowla/issues/12
