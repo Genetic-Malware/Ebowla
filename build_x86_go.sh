@@ -28,8 +28,9 @@ if [[ $3 == --hidden ]]; then
 else
 	export GOOS=windows; export GOARCH=386; export CGO_ENABLED=1; export CXX=i686-w64-mingw32-g++; export CC=i686-w64-mingw32-gcc
 	GOOS=windows; CXX=i686-w64-mingw32-g++; CC=i686-w64-mingw32-gcc; GCCFLAGS="-m32 -fmessage-length=0" CGO_ENABLED=1 GOOS=windows GOARCH=386 go build $sans_extension.go 
-echo [*] Building complete
 fi
+
+echo [*] Building complete
 
 rm -rf /tmp/MemoryModule
 
