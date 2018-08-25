@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ "$#" -ne 2 ]; then
-	echo "Usage: $0 go_x86_script.go output.exe"
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ] ; then
+	echo "Usage: $0 go_x86_script.go output.exe [Optional argument: --hidden]"
 	exit
 fi
 
@@ -21,8 +21,14 @@ cp $1 /tmp/$sans_extension.go
 
 cd /tmp/
 echo [*] Building...
-export GOOS=windows; export GOARCH=386; export CGO_ENABLED=1; export CXX=i686-w64-mingw32-g++; export CC=i686-w64-mingw32-gcc
-GOOS=windows; CXX=i686-w64-mingw32-g++; CC=i686-w64-mingw32-gcc; GCCFLAGS="-m32 -fmessage-length=0" CGO_ENABLED=1 GOOS=windows GOARCH=386 go build $sans_extension.go 
+
+if [[ $3 == --hidden ]]; then
+	export GOOS=windows; export GOARCH=386; export CGO_ENABLED=1; export CXX=i686-w64-mingw32-g++; export CC=i686-w64-mingw32-gcc
+	GOOS=windows; CXX=i686-w64-mingw32-g++; CC=i686-w64-mingw32-gcc; GCCFLAGS="-m32 -fmessage-length=0" CGO_ENABLED=1 GOOS=windows GOARCH=386 go build -ldflags -H=windowsgui $sans_extension.go 
+else
+	export GOOS=windows; export GOARCH=386; export CGO_ENABLED=1; export CXX=i686-w64-mingw32-g++; export CC=i686-w64-mingw32-gcc
+	GOOS=windows; CXX=i686-w64-mingw32-g++; CC=i686-w64-mingw32-gcc; GCCFLAGS="-m32 -fmessage-length=0" CGO_ENABLED=1 GOOS=windows GOARCH=386 go build $sans_extension.go 
+fi
 
 echo [*] Building complete
 
